@@ -1,4 +1,38 @@
-export default function StudentTable({ students, search, onEdit, onDelete }) {
+export default function StudentTable({ students, search, onEdit, onDelete, isLoading }) {
+
+    // Skeleton rows while data is loading
+    if (isLoading) {
+        return (
+            <>
+                <div className="table-wrap">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Age</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} className="skeleton-row">
+                                    <td><span className="skeleton-cell" style={{ width: '24px' }} /></td>
+                                    <td><span className="skeleton-cell" style={{ width: '120px' }} /></td>
+                                    <td><span className="skeleton-cell" style={{ width: '160px' }} /></td>
+                                    <td><span className="skeleton-cell" style={{ width: '40px' }} /></td>
+                                    <td><span className="skeleton-cell" style={{ width: '120px' }} /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <p className="count skeleton-text">Loading students…</p>
+            </>
+        );
+    }
+
     return (
         <>
             <div className="table-wrap">
@@ -51,6 +85,7 @@ export default function StudentTable({ students, search, onEdit, onDelete }) {
 
             <p className="count">
                 Total: {students.length} student{students.length !== 1 ? 's' : ''}
+                {search && ` (filtered)`}
             </p>
         </>
     );

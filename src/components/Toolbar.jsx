@@ -1,4 +1,4 @@
-export default function Toolbar({ search, onSearchChange, onAdd }) {
+export default function Toolbar({ search, onSearchChange, onAdd, onExport }) {
     return (
         <div className="toolbar">
             <input
@@ -8,6 +8,9 @@ export default function Toolbar({ search, onSearchChange, onAdd }) {
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
             />
+            <button className="btn btn-export" onClick={onExport} title="Download Excel">
+                ⬇ Export Excel
+            </button>
             <button className="btn btn-primary" onClick={onAdd}>
                 ➕ Add Student
             </button>
