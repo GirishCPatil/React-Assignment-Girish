@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { initialStudents, nextId, incrementNextId } from '../data/students';
 import { validateStudent, isValid } from '../utils/validateStudent';
 
 const EMPTY_ERRORS = { name: '', email: '', age: '' };
+const API_URL = 'http://localhost:5000/api/students';
 
 export function useStudents() {
     const [students, setStudents] = useState([]);
     const [search, setSearch] = useState('');
 
-    // Simulated initial loading state
     const [isLoading, setIsLoading] = useState(true);
 
     // Modal / form state
@@ -23,14 +22,33 @@ export function useStudents() {
     // Delete confirmation state
     const [deleteTarget, setDeleteTarget] = useState(null); // { id, name }
 
-    // Simulate initial data fetch on mount
+    // Fetch Initial Data
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setStudents(initialStudents);
-            setIsLoading(false);
-        }, 800);
-        return () => clearTimeout(timer);
+        fetchStudents();
     }, []);
+
+    async function fetchStudents() {
+        setIsLoading(true);
+        try {
+            const res = await fetch(API_URL);
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+
+            // Map MongoDB _id to id for the frontend
+            const mapped = data.map(s => ({
+                id: s._id,
+                name: s.name,
+                email: s.email,
+                age: s.age
+            }));
+
+            setStudents(mapped);
+        } catch (err) {
+            console.error('Error fetching students:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     // Derived: filtered list
     const filtered = students.filter(
@@ -62,7 +80,7 @@ export function useStudents() {
         setFieldErrors(EMPTY_ERRORS);
     }
 
-    function handleSave(e) {
+    async function handleSave(e) {
         e.preventDefault();
 
         const errors = validateStudent({ name, email, age });
@@ -72,45 +90,93 @@ export function useStudents() {
         }
 
         setIsSaving(true);
+        setFieldErrors(EMPTY_ERRORS);
 
-        // Simulate async save (600 ms)
-        setTimeout(() => {
+        const payload = {
+            name: name.trim(),
+            email: email.trim(),
+            age: Number(age)
+        };
+
+        try {
+            let res;
             if (editStudent) {
-                setStudents((prev) =>
-                    prev.map((s) =>
-                        s.id === editStudent.id
-                            ? { ...s, name: name.trim(), email: email.trim(), age: Number(age) }
-                            : s
-                    )
-                );
+                // PUT request for existing student
+                res = await fetch(`${API_URL}/${editStudent.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
             } else {
-                const newId = nextId;
-                incrementNextId();
-                setStudents((prev) => [
-                    ...prev,
-                    { id: newId, name: name.trim(), email: email.trim(), age: Number(age) },
-                ]);
+                // POST request for new student
+                res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
             }
-            setIsSaving(false);
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                // Backend sent a validation error, probably unique email constraint
+                throw new Error(data.error || 'Failed to save');
+            }
+
+            // Map the returned mongo object back to local id-based object
+            const savedStudent = {
+                id: data._id,
+                name: data.name,
+                email: data.email,
+                age: data.age
+            };
+
+            if (editStudent) {
+                setStudents((prev) => prev.map((s) => s.id === editStudent.id ? savedStudent : s));
+            } else {
+                // Prepend to top
+                setStudents((prev) => [savedStudent, ...prev]);
+            }
+
             closeForm();
-        }, 600);
+        } catch (err) {
+            console.error(err);
+            // Example handling for duplicate email from backend
+            if (err.message.toLowerCase().includes('email')) {
+                setFieldErrors({ ...EMPTY_ERRORS, email: err.message });
+            } else {
+                // Generic error handling (you could use toasts here too if desired)
+                alert(`Error saving student: ${err.message}`);
+            }
+        } finally {
+            setIsSaving(false);
+        }
     }
 
-    // Opens confirmation dialog for delete
     function handleDelete(id) {
         const student = students.find((s) => s.id === id);
         if (student) setDeleteTarget(student);
     }
 
-    // Called when user confirms delete in the dialog
-    function confirmDelete() {
-        if (deleteTarget) {
+    async function confirmDelete() {
+        if (!deleteTarget) return;
+
+        try {
+            const res = await fetch(`${API_URL}/${deleteTarget.id}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) throw new Error('Failed to delete student');
+
             setStudents((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert('Could not delete student. Please try again.');
+        } finally {
+            setDeleteTarget(null);
         }
-        setDeleteTarget(null);
     }
 
-    // Called when user cancels delete
     function cancelDelete() {
         setDeleteTarget(null);
     }
