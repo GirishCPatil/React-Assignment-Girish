@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { validateStudent, isValid } from '../utils/validateStudent';
 
 const EMPTY_ERRORS = { name: '', email: '', age: '' };
-const API_URL = 'http://localhost:5000/api/students';
+const API_URL = 'https://studentsync-lr3b.onrender.com/api/students';
 
 export function useStudents() {
     const [students, setStudents] = useState([]);
