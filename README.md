@@ -1,6 +1,6 @@
 # 📚 Student Management System
 
-A modern, responsive **Student Management System** built with **React 19** and **Vite**. This application allows you to manage student records efficiently with features like adding, editing, deleting, searching, sorting, and exporting data.
+A modern, responsive **MERN Stack Student Management System** built with **React 19**, **Vite**, **Node.js**, **Express**, and **MongoDB**. This application allows you to manage student records efficiently with features like adding, editing, deleting, searching, sorting, and exporting data.
 
 ---
 
@@ -20,7 +20,9 @@ A modern, responsive **Student Management System** built with **React 19** and *
 
 | Technology | Purpose |
 |---|---|
-| React 19 | UI Framework |
+| React 19 | Frontend UI Framework |
+| Node.js & Express | Backend API Server |
+| MongoDB & Mongoose | Database & ORM |
 | Vite | Build Tool & Dev Server |
 | Lucide React | Icons |
 | react-hot-toast | Notifications |
@@ -33,6 +35,12 @@ A modern, responsive **Student Management System** built with **React 19** and *
 
 ```
 react-assignment-girish/
+├── backend/
+│   ├── models/
+│   │   └── Student.js          # Mongoose schema for students
+│   ├── server.js               # Express API and DB connection
+│   ├── package.json            # Backend dependencies
+│   └── .env                    # Environment variables (Mongo URI)
 ├── public/
 ├── src/
 │   ├── assets/
@@ -40,9 +48,7 @@ react-assignment-girish/
 │   │   ├── Header.jsx          # App header / navbar
 │   │   ├── StudentFormModal.jsx # Add/Edit student modal form
 │   │   ├── StudentTable.jsx    # Table to display students
-│   │   └── Toolbar.jsx         # Search, filter & export controls
-│   ├── data/
-│   │   └── students.js         # Initial/seed student data
+│   │   ├── Toolbar.jsx         # Search, filter & export controls
 │   ├── hooks/
 │   │   └── useStudents.js      # Custom hook for student state logic
 │   ├── utils/
@@ -87,6 +93,28 @@ npm run dev
 
 Open your browser and navigate to `http://localhost:5173`
 
+### Backend Setup (Optional for local dev)
+
+The frontend is currently configured to point to a deployed backend `https://studentsync-lr3b.onrender.com`.
+
+If you wish to run the backend locally:
+
+```bash
+# 1. Navigate to the backend folder
+cd backend
+
+# 2. Install dependencies
+npm install
+
+# 3. Create a .env file with your MONGO_URI
+echo "MONGO_URI=your_mongodb_connection_string" > .env
+echo "PORT=5000" >> .env
+
+# 4. Start the Express server
+node server.js
+```
+*(Remember to update `API_URL` in `src/hooks/useStudents.js` to `http://localhost:5000/api/students` if running locally)*
+
 ---
 
 ## 📦 Available Scripts
@@ -112,12 +140,11 @@ Open your browser and navigate to `http://localhost:5173`
 
 ## 🧪 Validation Rules
 
-Student form validation (defined in `utils/validateStudent.js`) includes:
+Student form validation (enforced on both Frontend and MongoDB) includes:
 
-- **Name** — Required, alphabets only
-- **Marks** — Required, numeric, between 0–100
-- **Grade** — Auto-calculated or manually set
-- Other fields as applicable
+- **Name** — Required, min 2 characters
+- **Email** — Required, valid format, MUST BE UNIQUE in the database
+- **Age** — Required, numeric, between 1–100
 
 ---
 
